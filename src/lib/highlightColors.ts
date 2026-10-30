@@ -12,7 +12,7 @@ export const DEFAULT_HIGHLIGHT = '#eed16a';
 export function normalizeHex(value: string): string | null {
   const hex = value.trim().replace(/^#/, '');
   if (!/^(?:[\da-f]{3}|[\da-f]{6})$/i.test(hex)) return null;
-  return '#' + (hex.length === 3 ? [...hex].map(c => c + c).join('') : hex).toLowerCase();
+  return '#' + (hex.length === 3 ? [...hex].map((c) => c + c).join('') : hex).toLowerCase();
 }
 
 export function highlightColor(value?: string): string {
@@ -22,7 +22,7 @@ export function highlightColor(value?: string): string {
 /** Choose the higher-contrast text color, including for very dark custom colors. */
 export function highlightInk(background: string): string {
   const hex = highlightColor(background).slice(1);
-  const rgb = [0, 2, 4].map(i => {
+  const rgb = [0, 2, 4].map((i) => {
     const c = parseInt(hex.slice(i, i + 2), 16) / 255;
     return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
   });

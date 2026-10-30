@@ -21,7 +21,6 @@ import { saveText, loadText, deleteText } from './lib/textStore';
 import { removeBookNotes } from './lib/notesVaultSync';
 import { useNotesVaultSync } from './hooks/useNotesVaultSync';
 import { NotesVaultNotice } from './components/NotesVaultNotice';
-import { repairBookMetadata } from './lib/bookMetadata';
 
 /**
  * How a long import reports itself: the phase, plus the OCR page counter when
@@ -38,12 +37,6 @@ const newId = () => `bk_${Date.now().toString(36)}_${Math.random().toString(36).
 export default function App() {
   const { t } = useI18n();
   const [books, setBooks] = useLocalStorage<Book[]>('books', []);
-  useEffect(() => {
-    setBooks(current => {
-      const repaired = current.map(repairBookMetadata);
-      return repaired.some((book, i) => book !== current[i]) ? repaired : current;
-    });
-  }, [setBooks]);
   /**
    * Live OCR page counters by book id. Deliberately NOT part of `books`: that
    * array is persisted, so a counter there would survive a reload as a stale

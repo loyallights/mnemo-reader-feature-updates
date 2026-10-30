@@ -123,6 +123,9 @@ match, the lead policy and the seven locale files).
 The additions below extend the reader described above. Original project content,
 credits, and screenshots are retained. The existing screenshots predate these updates.
 
+Developer notes on module responsibilities, reconciliation, and spine compatibility
+are in [Maintaining reader notes](docs/reader-notes-development.md).
+
 ### Highlights and book notes
 
 **Search book & notes** searches only the currently open book and its saved
