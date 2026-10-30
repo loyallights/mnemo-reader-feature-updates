@@ -18,6 +18,10 @@ import { ocrDetail } from './lib/ocrLabel';
 import { ConfirmDelete } from './components/ConfirmDelete';
 import { IconBook } from './components/Icons';
 import { saveText, loadText, deleteText } from './lib/textStore';
+import { removeBookNotes } from './lib/notesVaultSync';
+import { useNotesVaultSync } from './hooks/useNotesVaultSync';
+import { NotesVaultNotice } from './components/NotesVaultNotice';
+import { repairBookMetadata } from './lib/bookMetadata';
 
 /**
  * How a long import reports itself: the phase, plus the OCR page counter when
@@ -34,6 +38,12 @@ const newId = () => `bk_${Date.now().toString(36)}_${Math.random().toString(36).
 export default function App() {
   const { t } = useI18n();
   const [books, setBooks] = useLocalStorage<Book[]>('books', []);
+  useEffect(() => {
+    setBooks(current => {
+      const repaired = current.map(repairBookMetadata);
+      return repaired.some((book, i) => book !== current[i]) ? repaired : current;
+    });
+  }, [setBooks]);
   /**
    * Live OCR page counters by book id. Deliberately NOT part of `books`: that
    * array is persisted, so a counter there would survive a reload as a stale
@@ -52,7 +62,8 @@ export default function App() {
   const [reloadNonce, setReloadNonce] = useState(0);
 
   // The app's own vault + one chronicle per book, entirely to the side of reading.
-  useSandboxCatalogue(books);
+  const sandboxVault = useSandboxCatalogue(books);
+  useNotesVaultSync(books, sandboxVault);
 
   const loadedCache = useRef<Map<string, LoadedBook>>(new Map());
   const toastId = useRef(0);
@@ -91,7 +102,8 @@ export default function App() {
 
   /** Load the built-in demo text so the reader + voice can be tried without the host. */
   const loadSample = useCallback(() => {
-    const id = `sample_${Date.now().toString(36)}`;
+    // Stable identity lets demo highlights survive reopening the same story.
+    const id = 'sample_lantern_keeper_v1';
     const { sentences, offsets } = splitSentences(SAMPLE_TEXT);
     const chapters = detectChapters(SAMPLE_TEXT, offsets);
     loadedCache.current.set(id, { bookId: id, text: SAMPLE_TEXT, sentences, sentenceOffsets: offsets });
@@ -322,6 +334,9 @@ export default function App() {
   const requestDelete = useCallback((book: Book) => { setConfirmDelete(book); }, []);
 
   const deleteBook = useCallback((book: Book) => {
+    try { removeBookNotes(book.id); } catch {
+      notify('err', 'Book notes could not be removed. Please try again.'); return;
+    }
     setConfirmDelete(null);
     loadedCache.current.delete(book.id);
     void deleteText(book.id);                      // erase the durable local copy
@@ -335,6 +350,7 @@ export default function App() {
 
   return (
     <div className="app">
+      <NotesVaultNotice />
       {activeBook && activeLoaded ? (
         <Reader
           key={`${activeBook.id}:${reloadNonce}`}
@@ -343,6 +359,8 @@ export default function App() {
           settings={settings}
           onChange={(patch) => setSettings(s => ({ ...s, ...patch }))}
           onProgress={(i) => { if (activeBook.progressSentence !== i) patchBook(activeBook.id, { progressSentence: i }); }}
+          onFinish={() => patchBook(activeBook.id, { finishedAt: activeBook.finishedAt ?? Date.now() })}
+          onToggleFinished={() => patchBook(activeBook.id, { finishedAt: activeBook.finishedAt ? undefined : Date.now() })}
           onBack={() => setReader(null)}
           onDeepOcr={() => deepOcr(activeBook)}
           notify={notify}
@@ -365,6 +383,7 @@ export default function App() {
             ocr={ocrByBook}
             onOpen={openBook}
             onDelete={requestDelete}
+            onToggleFinished={book => patchBook(book.id, { finishedAt: book.finishedAt ? undefined : Date.now() })}
             onAddFile={addFile}
             onAddFolder={addFolder}
             onAddUrl={addUrl}

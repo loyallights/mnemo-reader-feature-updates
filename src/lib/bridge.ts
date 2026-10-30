@@ -163,6 +163,13 @@ export const bridge = {
   /** Anchor one chronicle into a NAMED vault (used for the per-book catalogue). */
   socialIngest: (vault: string, content: string, spineType?: string) =>
     sdk.socialIngest(vault, content, spineType),
+  catalogueIngest: (vault: string, content: string, sourceRef: string) =>
+    sdk.invoke<{ chronicleId?: number | string }>('social.ingest', { vault, content, sourceRef, spineType: 'SOCIAL_CONTACT' }),
+
+  notesIngest: (vault: string, content: string, sourceRef: string) =>
+    sdk.invoke<{ chronicleId?: number | string }>('social.ingest', { vault, content, sourceRef, spineType: 'SOCIAL_NODE' }),
+  notesQuery: (vault: string) => sdk.invoke<{ chronicles: { id: number | string; content: string }[] }>('social.query', { vault, limit: 200 }),
+  forgetNotes: (ids: number[]) => sdk.forgetSandbox(ids),
 
   /** Open a URL in the OS browser. Best-effort. */
   openExternal: (url: string) => sdk.invoke('shell.openExternal', { url }).catch(() => {}),

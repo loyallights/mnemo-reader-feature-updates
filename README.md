@@ -118,6 +118,142 @@ src/
 Tests run with `pnpm test` (68 of them, on the sentence splitter, the language
 match, the lead policy and the seven locale files).
 
+## Reader updates: highlights, notes, search, and library progress
+
+The additions below extend the reader described above. Original project content,
+credits, and screenshots are retained. The existing screenshots predate these updates.
+
+### Highlights and book notes
+
+**Search book & notes** searches only the currently open book and its saved
+highlights/comments, General notes, and color labels. Choose Book text, My notes
+and theme labels, or both. Results include chapter context and jump to the passage,
+expand its note chapter, or focus General notes. The search matches words/phrases
+and your theme labels; it does not infer conceptual similarities. Broader AI recall
+remains a separate host feature subject to vault permissions. Search works offline.
+
+Library cards show a percentage based on the saved reading position, including 0%
+for unstarted books. **Mark finished** adds a saved Finished badge and displays 100%;
+**Mark unfinished** restores the regular progress display without resetting position.
+Finishing read-aloud playback without skipped passages also marks the book finished.
+Finished books sort after unfinished books by default. The **Show** menu can hide
+finished books or show only finished books; the chosen filter is saved on this device.
+
+The notes panel floats over the reader. Drag its title bar to move it; the content
+scrolls independently. Drag the bottom-right corner handle to resize the panel.
+The resize handle also accepts arrow keys when focused (Shift for larger steps).
+Minimum sizes keep the controls usable, and resizing is bounded by the window.
+Keyboard users can focus the title bar and use arrow keys
+(Shift for larger steps), or Home to reset its position. The panel stays within the
+window and keeps its position while open in the same book.
+
+
+Select text in the reading view, optionally add a comment, then choose **Save highlight**.
+**Book notes** opens one running note per book, ordered by passage location. Choose a
+chapter link to return to a passage and close the notes panel; comments can be
+edited and highlights removed.
+Highlights and comments are grouped into collapsible chapter lists, each showing its
+highlight count. Only chapters containing saved highlights/comments appear. Title and author headings
+are omitted; highlights on those pages remain under Other saved passages. Chapters
+start collapsed and can be opened independently. Clicking
+a highlight in the reader automatically expands its chapter before revealing the entry.
+Click a saved highlight in the reader to open Book notes directly at its entry.
+Keyboard users can focus a highlight and press Enter or Space. Selecting text across
+a highlight still works without opening notes.
+The saved highlights remain separate from the moving read-aloud word highlight.
+
+Each book also has a **General notes** section for thoughts unrelated to a selected
+passage. It saves as you type, independently of highlights. If saving fails, keep
+the book open and use **Save notes** to retry. Existing highlights are preserved
+when upgrading to the combined notes format. Highlights offer seven rainbow
+presets plus a custom 3- or 6-digit hex field with a preview. Use **Edit highlight**
+to change an existing color or comment. Older highlights remain yellow. Custom
+colors automatically use contrasting black or white text. For overlapping
+highlights, the most recently added highlight supplies the visible color.
+
+**Color key** is a collapsible list at the top of Book notes, closed by default to
+keep the panel compact. Highlights and comments follow, with General notes at the
+end. Expand Color key to find a blank label field beside each rainbow
+swatch and any custom highlight colors used in this book. Write your own meanings;
+labels save as you type, separately for each book. The highlight picker shows the
+saved meaning beside its preview and in each swatch's tooltip. Labeling a custom
+color also makes it available as a picker swatch for reuse. Existing notes and
+highlights are preserved when adding or changing labels.
+Use the × beside a color to remove it from that book's key. Removed colors can be
+added back from the dropdown, with their labels preserved. You can also add a custom
+hex color before using it for any highlights. Removing a key row never deletes or
+recolors existing highlights; the selection is saved separately for each book.
+
+Notes save locally first. Inside Mnemosyne OS they also sync to the app's own
+`APP-MNEMO-READER` vault, using the host's existing `vault:read`/`vault:write`
+permissions. The vault must separately be allowed for AI recall in the host;
+the cartridge never enables permanence or broadens retrieval permissions itself.
+The preview and sample story keep their notes local. This does not create entries
+in the host's separate Notes app or synchronize the editable UI across devices.
+
+Sync includes quoted highlights, their chapter locations, reader comments, General
+notes, and color meanings. It runs after a short typing pause, on reopening the
+cartridge, on retry, and periodically while it is open. Updates replace older note
+copies only after their replacements are safely saved; cleared notes and confirmed
+book deletion remove this feature's own vault copies. Catalogue entries and archived
+book text are not removed. Failures stay visible, and pending work retries later.
+If the cartridge is closed or offline, AI recall can still see the last synced version.
+The host currently lists at most 200 recent vault entries; a durable local journal
+tracks older synced IDs for replacement/deletion. Keep browser storage until pending
+sync work completes. Clearing it can lose pending edits or deletions and the journal.
+Clearing local state alone never triggers a purge of remote notes.
+
+### Catalogue consistency and validation
+
+Catalogue records now carry a stable book identifier. Changes save a replacement
+before removing superseded records, avoiding duplicate counts as extraction or
+metadata changes. Exact legacy catalogue snapshots are migrated without deleting
+highlights, general notes, or unrelated vault entries. The book counter is labeled
+Books. Existing local book identities and reading positions are preserved.
+
+The current suite contains **107 tests**, including saved annotations, colors,
+chapter navigation, search, floating notes, library filters, note sync, and catalogue
+reconciliation. Run `pnpm test`, `pnpm build`, and `pnpm lint` to validate changes.
+The original test count above describes the baseline reader.
+
+Vault permission failures, retries, replacement writes, deletions, and recovery are
+tested with a simulated host. Manual testing inside Mnemosyne OS confirmed note
+sync, retrieval of a quote and its distinct reader comment, and reconciliation to
+one catalogue entry and one notes entry for a single test book. Local Dream logs
+confirmed that the reader notes entry was included in a multi-vault comparison scan;
+a specific resulting cross-vault bridge was not independently verified.
+
+The standalone checkout retains the original `workspace:*` SDK dependency. Outside
+the Mnemosyne workspace, the SDK must be supplied through the workspace or installed
+separately for development; host import, extraction, vault sync, and AI recall cannot
+be tested in the standalone browser preview.
+
+### Dream State and cross-vault associations
+
+Saved notes use `SOCIAL_NODE`, so Dream's Social category must be enabled.
+The host also excludes isolated app sandboxes from Dream. Saving successfully does
+not unlock the sandbox: the human must unlock permanence in the host's vault controls.
+The installed host constructs Dream's corpus from active vaults, excluding isolated
+sandboxes, provisional vaults, hidden vaults, and MAXIMUM-protection vaults. Requesting
+all vaults does not override those exclusions or activate unmounted vaults.
+
+Every exported part identifies the book and author and distinguishes quoted book
+text from reader comments and general notes. Color labels are reader-defined; a
+highlight does not establish the reader's agreement or personal experience. These
+provenance cues assist inference but cannot guarantee a model's interpretation.
+Dream's associations are sampled, so a run need not connect every book or vault.
+A consolidation copied from a conversation is not evidence that a reader note was
+used directly. Verify source vaults when assessing a particular comparison.
+This cartridge neither runs a separate Dream engine nor changes host permissions.
+The existing `SOCIAL_CONTACT` catalogue and `SOCIAL_NODE` notes mapping is retained
+for compatibility. Moving to Reference/Note spines requires checking host ingestion
+and Dream eligibility; it is not included in this update. Annotation controls use
+English labels even when the baseline reader follows another host language.
+Highlights apply to extracted reader text and do not modify the original PDF/document.
+If re-extraction or Deep OCR changes a saved passage, its quote and comment are kept
+in Book notes, with a warning instead of highlighting or linking to the wrong text.
+The annotation controls currently use English labels.
+
 ## License
 
 MIT © Mnemosyne Labs. Contributions welcome — this cartridge is meant to be

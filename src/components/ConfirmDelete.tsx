@@ -26,6 +26,8 @@ export function ConfirmDelete({ book, onCancel, onConfirm }: {
           <p style={{ margin: '0 0 8px' }}>{t('confirm.line1')}</p>
           <p style={{ margin: '0 0 8px' }}>{t('confirm.line2')}</p>
           <p style={{ margin: 0 }}>{t('confirm.line3')}</p>
+          <p>This also removes this book’s saved highlights and comments from MnemoReader.</p>
+          <p>Its synced note copies will also be removed from the MnemoReader vault. If the host is unavailable, that removal waits until the cartridge can sync again. Previously archived book text stays in the Library vault.</p>
         </div>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
           <button className="btn btn-ghost" onClick={onCancel}>{t('confirm.cancel')}</button>
